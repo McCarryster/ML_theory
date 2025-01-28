@@ -75,10 +75,10 @@ add_and_norm_output = layer_norm(fc_concat_attention_res_added)
 # STEP 7: Feed Forward (2 hidden layers, 512 and 2048)
 W_1 = np.random.rand(512, 2048)
 b_1 = np.random.rand(2048)
-# Relu here
 W_2 = np.random.rand(2048, 512)
 b_2 = np.random.rand(512)
 ff_1 = np.matmul(add_and_norm_output, W_1) + b_1 # (7,2048)
+# Relu here
 ff_2 = np.matmul(ff_1, W_2) + b_2 # (7,512)
 
 # STEP 8: Add Residual Connections and make layer norm again
@@ -126,9 +126,9 @@ for head in range(attention_heads):
 decoder_attention_values = []
 for head in range(attention_heads):
     unscaled_dot_product = np.matmul(Q_decoder[head], K_decoder[head].T)         # (5, 5)
-    if mask is not None:
-        unscaled_dot_product = np.where(mask, -np.inf, unscaled_dot_product)     # Aplies -infinity to future tokens (masking)
     scaled_dot_product = unscaled_dot_product / math.sqrt(embedding_per_head)
+    if mask is not None:
+        scaled_dot_product = np.where(mask, -np.inf, scaled_dot_product)         # Aplies -infinity to future tokens (masking)
     softmaxed_scaled_dot_product = softmax(scaled_dot_product)
     attention_output = np.matmul(softmaxed_scaled_dot_product, V_decoder[head])  # Shape (5, 64)
     decoder_attention_values.append(attention_output)
@@ -197,10 +197,10 @@ encoder_decoder_multi_head_attention_output = layer_norm(fc_concat_encoder_decod
 # STEP 20: Feed Forward (2 hidden layers, 512 and 2048)
 W_1_encoder_decoder = np.random.rand(512, 2048)
 b_1_encoder_decoder = np.random.rand(2048)
-# Relu here
 W_2_encoder_decoder = np.random.rand(2048, 512)
 b_2_encoder_decoder = np.random.rand(512)
 ff_1_encoder_decoder = np.matmul(encoder_decoder_multi_head_attention_output, W_1_encoder_decoder) + b_1_encoder_decoder # (5,512)X(512,2048)+2048 = (5,2048)
+# Relu here
 ff_2_encoder_decoder = np.matmul(ff_1_encoder_decoder, W_2_encoder_decoder) + b_2_encoder_decoder # (5,2048)X(2048,512)+512 = (5,512)
 
 # STEP 21: Add Residual Connections and make layer norm
@@ -209,10 +209,11 @@ ff_2_encoder_decoder_attention_res_added = np.add(ff_2_encoder_decoder, encoder_
 encoder_decoder_output = layer_norm(fc_concat_encoder_decoder_attention_res_added) # Shape (5, 512)
 
 # STEP 22: Pass encoder_decoder_output into a Linear layer
+    # In real implementation it will be like that (embedding_size, vocabulary_size)
 W_O_final = np.random.rand(512, output_len)
 b_O_final = np.random.rand(output_len)
 linear_output = np.matmul(encoder_decoder_output, W_O_final) + b_O_final  # Shape (5, 5)
 
 # STEP 23. Apply softmax to get output word
 softmax_output = softmax(linear_output)
-print(softmax_output) # Shape (5, 5)
+print(softmax_output)
